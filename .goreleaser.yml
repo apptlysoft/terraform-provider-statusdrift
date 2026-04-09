@@ -11,21 +11,21 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - "-s -w -X main.version={{.Version}}"
+      - "-s -w -X main.version={{.Version}} -X main.commit={{.Commit}}"
     goos:
+      - freebsd
+      - windows
       - linux
       - darwin
-      - windows
-      - freebsd
     goarch:
       - amd64
-      - arm64
-      - arm
       - "386"
+      - arm
+      - arm64
     ignore:
       - goos: darwin
         goarch: "386"
-      - goos: darwin
+      - goos: windows
         goarch: arm
     binary: "{{ .ProjectName }}_v{{ .Version }}"
 
@@ -35,6 +35,9 @@ archives:
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
 
 checksum:
+  extra_files:
+    - glob: "terraform-registry-manifest.json"
+      name_template: "{{ .ProjectName }}_{{ .Version }}_manifest.json"
   name_template: "{{ .ProjectName }}_{{ .Version }}_SHA256SUMS"
   algorithm: sha256
 
@@ -50,11 +53,9 @@ signs:
       - "${artifact}"
 
 release:
+  extra_files:
+    - glob: "terraform-registry-manifest.json"
+      name_template: "{{ .ProjectName }}_{{ .Version }}_manifest.json"
 
 changelog:
-  sort: asc
-  filters:
-    exclude:
-      - "^docs:"
-      - "^test:"
-      - "^chore:"
+  disable: true
