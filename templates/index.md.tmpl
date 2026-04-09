@@ -1,0 +1,25 @@
+---
+page_title: "StatusDrift Provider"
+description: |-
+  The StatusDrift provider manages uptime monitoring resources including monitors, alerts, status pages, SLA policies, and more.
+---
+
+# StatusDrift Provider
+
+The StatusDrift provider lets you manage your [StatusDrift](https://statusdrift.com) uptime monitoring infrastructure as code. It supports the full lifecycle of monitors, notification channels, status pages, SLA policies, API keys, and related resources.
+
+## Authentication
+
+The provider authenticates using an API key that starts with the `sdk_` prefix. You can generate API keys in the StatusDrift dashboard or manage them with the `statusdrift_api_key` resource.
+
+Set the API key via provider configuration or the `STATUSDRIFT_API_KEY` environment variable:
+
+```shell
+export STATUSDRIFT_API_KEY="sdk_your_api_key_here"
+```
+
+## Example Usage
+
+{{ tffile "examples/provider/provider.tf" }}
+
+{{ .SchemaMarkdown | trimspace }}
