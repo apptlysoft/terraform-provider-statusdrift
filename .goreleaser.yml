@@ -50,7 +50,6 @@ signs:
       - "${artifact}"
 
 release:
-  draft: true
 
 changelog:
   sort: asc
