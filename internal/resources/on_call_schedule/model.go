@@ -5,6 +5,8 @@ import "github.com/hashicorp/terraform-plugin-framework/types"
 type OnCallScheduleModel struct {
 	ID               types.Int64  `tfsdk:"id"`
 	Name             types.String `tfsdk:"name"`
+	ScopeType        types.String `tfsdk:"scope_type"`
+	MonitorGroupID   types.Int64  `tfsdk:"monitor_group_id"`
 	Timezone         types.String `tfsdk:"timezone"`
 	Frequency        types.String `tfsdk:"frequency"`
 	RotationInterval types.Int64  `tfsdk:"rotation_interval"`

@@ -60,6 +60,7 @@ type Monitor struct {
 	MonitorGroupID       *int                   `json:"monitorGroupId"`
 	TagIDs               []int                  `json:"tagIds"`
 	Alerts               []AlertConfig          `json:"alerts"`
+	Assertions           []AssertionConfig      `json:"assertions"`
 	LocationsDownToAlert int                    `json:"locationsDownToAlert"`
 	ChecksDownToAlert    int                    `json:"checksDownToAlert"`
 	WarningThresholdMs   int                    `json:"warningThresholdMs"`
@@ -92,6 +93,13 @@ type DNSRecordConfig struct {
 	Enabled        bool     `json:"enabled"`
 }
 
+type AssertionConfig struct {
+	Type          string  `json:"type"`
+	Expression    string  `json:"expression"`
+	Comparison    string  `json:"comparison"`
+	ExpectedValue *string `json:"expected_value,omitempty"`
+}
+
 type MonitorInput struct {
 	Name                 string            `json:"name"`
 	Type                 string            `json:"type"`
@@ -120,6 +128,7 @@ type MonitorInput struct {
 	MonitorGroupID       *int              `json:"monitorGroupId,omitempty"`
 	TagIDs               []int             `json:"tagIds,omitempty"`
 	Alerts               []AlertConfig     `json:"alerts,omitempty"`
+	Assertions           []AssertionConfig `json:"assertions,omitempty"`
 	LocationsDownToAlert int               `json:"locationsDownToAlert"`
 	ChecksDownToAlert    int               `json:"checksDownToAlert"`
 	WarningThresholdMs   int               `json:"warningThresholdMs"`

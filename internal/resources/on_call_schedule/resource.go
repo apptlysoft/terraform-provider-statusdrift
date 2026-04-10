@@ -18,11 +18,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/apptlysoft/terraform-provider-statusdrift/internal/apiclient"
+	"github.com/apptlysoft/terraform-provider-statusdrift/internal/helpers"
 )
 
 var (
@@ -59,6 +61,19 @@ func (r *onCallScheduleResource) Schema(_ context.Context, _ resource.SchemaRequ
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(255),
 				},
+			},
+			"scope_type": schema.StringAttribute{
+				Description: "Schedule scope: org_default (organization-wide) or monitor_group (scoped to a specific group).",
+				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString("org_default"),
+				Validators: []validator.String{
+					stringvalidator.OneOf("org_default", "monitor_group"),
+				},
+			},
+			"monitor_group_id": schema.Int64Attribute{
+				Description: "The monitor group ID this schedule is scoped to. Required when scope_type is monitor_group.",
+				Optional:    true,
 			},
 			"timezone": schema.StringAttribute{
 				Description: "IANA timezone for the schedule (e.g. America/New_York, UTC).",
@@ -236,6 +251,8 @@ func (r *onCallScheduleResource) ImportState(ctx context.Context, req resource.I
 func modelToInput(ctx context.Context, m *OnCallScheduleModel, diags *diag.Diagnostics) apiclient.OnCallScheduleInput {
 	input := apiclient.OnCallScheduleInput{
 		Name:             m.Name.ValueString(),
+		ScopeType:        m.ScopeType.ValueString(),
+		MonitorGroupID:   helpers.IntPtr(m.MonitorGroupID),
 		Timezone:         m.Timezone.ValueString(),
 		Frequency:        m.Frequency.ValueString(),
 		RotationInterval: int(m.RotationInterval.ValueInt64()),
@@ -259,6 +276,12 @@ func modelToInput(ctx context.Context, m *OnCallScheduleModel, diags *diag.Diagn
 func apiToModel(s *apiclient.OnCallSchedule, m *OnCallScheduleModel, diags *diag.Diagnostics) {
 	m.ID = types.Int64Value(int64(s.ID))
 	m.Name = types.StringValue(s.Name)
+	m.ScopeType = types.StringValue(s.ScopeType)
+	if s.MonitorGroup != nil {
+		m.MonitorGroupID = types.Int64Value(int64(s.MonitorGroup.ID))
+	} else {
+		m.MonitorGroupID = types.Int64Null()
+	}
 	m.Timezone = types.StringValue(s.Timezone)
 	m.Frequency = types.StringValue(s.Frequency)
 	m.RotationInterval = types.Int64Value(int64(s.RotationInterval))

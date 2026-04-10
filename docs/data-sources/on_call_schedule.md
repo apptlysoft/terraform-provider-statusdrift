@@ -30,7 +30,9 @@ data "statusdrift_on_call_schedule" "primary" {
 
 - `enabled` (Boolean) Whether the schedule is active.
 - `frequency` (String) Rotation frequency.
+- `monitor_group_id` (Number) The monitor group ID this schedule is scoped to, if any.
 - `participant_ids` (List of Number) Ordered list of organization member IDs in the rotation.
 - `rotation_interval` (Number) Rotation interval.
+- `scope_type` (String) Schedule scope: org_default or monitor_group.
 - `starts_at` (String) Schedule start time.
 - `timezone` (String) IANA timezone.

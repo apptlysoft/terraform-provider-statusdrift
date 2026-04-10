@@ -25,6 +25,8 @@ type onCallScheduleDataSource struct {
 type onCallScheduleDataSourceModel struct {
 	ID               types.Int64  `tfsdk:"id"`
 	Name             types.String `tfsdk:"name"`
+	ScopeType        types.String `tfsdk:"scope_type"`
+	MonitorGroupID   types.Int64  `tfsdk:"monitor_group_id"`
 	Timezone         types.String `tfsdk:"timezone"`
 	Frequency        types.String `tfsdk:"frequency"`
 	RotationInterval types.Int64  `tfsdk:"rotation_interval"`
@@ -56,6 +58,14 @@ func (d *onCallScheduleDataSource) Schema(_ context.Context, _ datasource.Schema
 			"name": schema.StringAttribute{
 				Description: "The name of the on-call schedule.",
 				Optional:    true,
+				Computed:    true,
+			},
+			"scope_type": schema.StringAttribute{
+				Description: "Schedule scope: org_default or monitor_group.",
+				Computed:    true,
+			},
+			"monitor_group_id": schema.Int64Attribute{
+				Description: "The monitor group ID this schedule is scoped to, if any.",
 				Computed:    true,
 			},
 			"timezone": schema.StringAttribute{
@@ -141,6 +151,12 @@ func (d *onCallScheduleDataSource) Read(ctx context.Context, req datasource.Read
 
 	state.ID = types.Int64Value(int64(schedule.ID))
 	state.Name = types.StringValue(schedule.Name)
+	state.ScopeType = types.StringValue(schedule.ScopeType)
+	if schedule.MonitorGroup != nil {
+		state.MonitorGroupID = types.Int64Value(int64(schedule.MonitorGroup.ID))
+	} else {
+		state.MonitorGroupID = types.Int64Null()
+	}
 	state.Timezone = types.StringValue(schedule.Timezone)
 	state.Frequency = types.StringValue(schedule.Frequency)
 	state.RotationInterval = types.Int64Value(int64(schedule.RotationInterval))

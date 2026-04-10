@@ -37,5 +37,6 @@ Read-Only:
 - `enabled` (Boolean) Whether the SLA policy is active.
 - `id` (Number) The ID of the SLA policy.
 - `name` (String) The name of the SLA policy.
+- `scope` (String) Policy scope: org or group.
 - `uptime_target` (Number) Target uptime percentage.
 - `window_type` (String) SLA evaluation window type.

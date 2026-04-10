@@ -23,11 +23,13 @@ type onCallSchedulesDataSourceModel struct {
 }
 
 type onCallScheduleModel struct {
-	ID        types.Int64  `tfsdk:"id"`
-	Name      types.String `tfsdk:"name"`
-	Timezone  types.String `tfsdk:"timezone"`
-	Frequency types.String `tfsdk:"frequency"`
-	Enabled   types.Bool   `tfsdk:"enabled"`
+	ID             types.Int64  `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	ScopeType      types.String `tfsdk:"scope_type"`
+	MonitorGroupID types.Int64  `tfsdk:"monitor_group_id"`
+	Timezone       types.String `tfsdk:"timezone"`
+	Frequency      types.String `tfsdk:"frequency"`
+	Enabled        types.Bool   `tfsdk:"enabled"`
 }
 
 func NewDataSource() datasource.DataSource {
@@ -57,6 +59,14 @@ func (d *onCallSchedulesDataSource) Schema(_ context.Context, _ datasource.Schem
 						},
 						"name": schema.StringAttribute{
 							Description: "The name of the on-call schedule.",
+							Computed:    true,
+						},
+						"scope_type": schema.StringAttribute{
+							Description: "Schedule scope: org_default or monitor_group.",
+							Computed:    true,
+						},
+						"monitor_group_id": schema.Int64Attribute{
+							Description: "The monitor group ID this schedule is scoped to, if any.",
 							Computed:    true,
 						},
 						"timezone": schema.StringAttribute{
@@ -103,12 +113,20 @@ func (d *onCallSchedulesDataSource) Read(ctx context.Context, _ datasource.ReadR
 	}
 
 	for i, s := range schedules {
+		var monitorGroupID types.Int64
+		if s.MonitorGroup != nil {
+			monitorGroupID = types.Int64Value(int64(s.MonitorGroup.ID))
+		} else {
+			monitorGroupID = types.Int64Null()
+		}
 		state.Schedules[i] = onCallScheduleModel{
-			ID:        types.Int64Value(int64(s.ID)),
-			Name:      types.StringValue(s.Name),
-			Timezone:  types.StringValue(s.Timezone),
-			Frequency: types.StringValue(s.Frequency),
-			Enabled:   types.BoolValue(s.Enabled),
+			ID:             types.Int64Value(int64(s.ID)),
+			Name:           types.StringValue(s.Name),
+			ScopeType:      types.StringValue(s.ScopeType),
+			MonitorGroupID: monitorGroupID,
+			Timezone:       types.StringValue(s.Timezone),
+			Frequency:      types.StringValue(s.Frequency),
+			Enabled:        types.BoolValue(s.Enabled),
 		}
 	}
 

@@ -39,6 +39,8 @@ resource "statusdrift_on_call_schedule" "primary" {
 ### Optional
 
 - `enabled` (Boolean) Whether the on-call schedule is active.
+- `monitor_group_id` (Number) The monitor group ID this schedule is scoped to. Required when scope_type is monitor_group.
+- `scope_type` (String) Schedule scope: org_default (organization-wide) or monitor_group (scoped to a specific group).
 
 ### Read-Only
 

@@ -45,6 +45,19 @@ resource "statusdrift_monitor" "api_health" {
     notify_on_call             = true
     on_call_policy_id          = statusdrift_on_call_policy.default.id
   }
+
+  assertion {
+    type           = "json_path"
+    expression     = "$.status"
+    comparison     = "equals"
+    expected_value = "healthy"
+  }
+
+  assertion {
+    type       = "regex"
+    expression = "\"status\"\\s*:\\s*\"healthy\""
+    comparison = "matches"
+  }
 }
 
 resource "statusdrift_monitor" "dns_check" {
@@ -73,6 +86,7 @@ resource "statusdrift_monitor" "dns_check" {
 
 - `alert` (Block List) Alert configuration blocks. (see [below for nested schema](#nestedblock--alert))
 - `allow_invalid_certificate` (Boolean) Whether to allow invalid SSL certificates.
+- `assertion` (Block List) Response body assertion blocks. Only supported for HTTPS and HTTP_KEYWORD monitor types. Maximum 10 per monitor. (see [below for nested schema](#nestedblock--assertion))
 - `cache_buster` (Boolean) Whether to append a cache-busting query parameter.
 - `checks_down_to_alert` (Number) Number of consecutive checks that must fail before alerting (1-10).
 - `connection_timeout` (Number) Connection timeout in seconds (1-45).
@@ -122,3 +136,17 @@ Optional:
 - `notify_on_call` (Boolean) Whether this alert should trigger the on-call escalation policy.
 - `on_call_policy_id` (Number) On-call policy ID to use for this alert. When null and notify_on_call is true, the organization default policy is used.
 - `recurring_interval_minutes` (Number) Interval in minutes for recurring alerts.
+
+
+<a id="nestedblock--assertion"></a>
+### Nested Schema for `assertion`
+
+Required:
+
+- `comparison` (String) The comparison operator. Valid values depend on assertion type.
+- `expression` (String) The expression to evaluate (JSONPath, XPath, or regex pattern). Maximum 500 characters.
+- `type` (String) The assertion type. Valid values: json_path, xpath, regex.
+
+Optional:
+
+- `expected_value` (String) The expected value for comparison. Required for equals, not_equals, contains, not_contains, greater_than, less_than. Maximum 1000 characters.

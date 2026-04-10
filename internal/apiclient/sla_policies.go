@@ -36,6 +36,7 @@ type SlaPolicy struct {
 	ResponseTimeSlaEnabled  bool                  `json:"responseTimeSlaEnabled"`
 	ResponseTimeThresholdMs *int                  `json:"responseTimeThresholdMs"`
 	Enabled                 bool                  `json:"enabled"`
+	Scope                   string                `json:"scope"`
 	Monitors                []SlaPolicyMonitorRef `json:"monitors"`
 	Tags                    []SlaPolicyTagRef     `json:"tags"`
 	Groups                  []SlaPolicyGroupRef   `json:"groups"`
@@ -47,6 +48,7 @@ type SlaPolicyCreateInput struct {
 	Name                    string  `json:"name"`
 	UptimeTarget            float64 `json:"uptimeTarget"`
 	WindowType              string  `json:"windowType"`
+	Scope                   string  `json:"scope"`
 	ResponseTimeSlaEnabled  *bool   `json:"responseTimeSlaEnabled,omitempty"`
 	ResponseTimeThresholdMs *int    `json:"responseTimeThresholdMs,omitempty"`
 	Enabled                 *bool   `json:"enabled,omitempty"`
@@ -59,6 +61,7 @@ type SlaPolicyUpdateInput struct {
 	Name                    *string  `json:"name,omitempty"`
 	UptimeTarget            *float64 `json:"uptimeTarget,omitempty"`
 	WindowType              *string  `json:"windowType,omitempty"`
+	Scope                   *string  `json:"scope,omitempty"`
 	ResponseTimeSlaEnabled  *bool    `json:"responseTimeSlaEnabled,omitempty"`
 	ResponseTimeThresholdMs *int     `json:"responseTimeThresholdMs,omitempty"`
 	Enabled                 *bool    `json:"enabled,omitempty"`

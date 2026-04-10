@@ -7,6 +7,7 @@ type SlaPolicyModel struct {
 	Name                    types.String  `tfsdk:"name"`
 	UptimeTarget            types.Float64 `tfsdk:"uptime_target"`
 	WindowType              types.String  `tfsdk:"window_type"`
+	Scope                   types.String  `tfsdk:"scope"`
 	ResponseTimeSlaEnabled  types.Bool    `tfsdk:"response_time_sla_enabled"`
 	ResponseTimeThresholdMs types.Int64   `tfsdk:"response_time_threshold_ms"`
 	Enabled                 types.Bool    `tfsdk:"enabled"`

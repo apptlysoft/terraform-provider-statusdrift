@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.0
+
+FEATURES:
+
+* **Resource `statusdrift_sla_policy`:** Add `scope` attribute for organization-wide or group-specific SLA policies
+* **Resource `statusdrift_monitor`:** Add `assertion` block for response body validation using JSON Path, XPath, or regex expressions with configurable comparison operators
+* **Resource `statusdrift_on_call_schedule`:** Add `scope_type` and `monitor_group_id` attributes for group-scoped on-call schedules
+
 ## 1.0.0
 
 FEATURES:

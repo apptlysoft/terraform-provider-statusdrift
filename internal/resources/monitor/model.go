@@ -38,6 +38,14 @@ type MonitorModel struct {
 	DNSServers           types.List   `tfsdk:"dns_servers"`
 	DNSMonitoringMode    types.String `tfsdk:"dns_monitoring_mode"`
 	Alerts               types.List   `tfsdk:"alert"`
+	Assertions           types.List   `tfsdk:"assertion"`
+}
+
+type AssertionModel struct {
+	Type          types.String `tfsdk:"type"`
+	Expression    types.String `tfsdk:"expression"`
+	Comparison    types.String `tfsdk:"comparison"`
+	ExpectedValue types.String `tfsdk:"expected_value"`
 }
 
 type AlertModel struct {

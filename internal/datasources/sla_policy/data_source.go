@@ -26,6 +26,7 @@ type slaPolicyDataSourceModel struct {
 	Name                    types.String  `tfsdk:"name"`
 	UptimeTarget            types.Float64 `tfsdk:"uptime_target"`
 	WindowType              types.String  `tfsdk:"window_type"`
+	Scope                   types.String  `tfsdk:"scope"`
 	ResponseTimeSlaEnabled  types.Bool    `tfsdk:"response_time_sla_enabled"`
 	ResponseTimeThresholdMs types.Int64   `tfsdk:"response_time_threshold_ms"`
 	Enabled                 types.Bool    `tfsdk:"enabled"`
@@ -67,6 +68,10 @@ func (d *slaPolicyDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 			},
 			"window_type": schema.StringAttribute{
 				Description: "SLA evaluation window type.",
+				Computed:    true,
+			},
+			"scope": schema.StringAttribute{
+				Description: "Policy scope: org or group.",
 				Computed:    true,
 			},
 			"response_time_sla_enabled": schema.BoolAttribute{
@@ -167,6 +172,7 @@ func (d *slaPolicyDataSource) Read(ctx context.Context, req datasource.ReadReque
 	state.Name = types.StringValue(policy.Name)
 	state.UptimeTarget = types.Float64Value(policy.UptimeTarget)
 	state.WindowType = types.StringValue(policy.WindowType)
+	state.Scope = types.StringValue(policy.Scope)
 	state.ResponseTimeSlaEnabled = types.BoolValue(policy.ResponseTimeSlaEnabled)
 	state.Enabled = types.BoolValue(policy.Enabled)
 	state.CreatedAt = types.StringValue(policy.CreatedAt)

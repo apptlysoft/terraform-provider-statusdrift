@@ -30,10 +30,18 @@ type OnCallOverrideResponse struct {
 	ReplacementMember OnCallMember `json:"replacementMember"`
 }
 
+// MonitorGroupRef represents a monitor group reference in an on-call schedule response.
+type MonitorGroupRef struct {
+	ID   int    `json:"id"`
+	Name string `json:"name"`
+}
+
 // OnCallSchedule represents an on-call schedule returned by the API.
 type OnCallSchedule struct {
 	ID                     int                      `json:"id"`
 	Name                   string                   `json:"name"`
+	ScopeType              string                   `json:"scopeType"`
+	MonitorGroup           *MonitorGroupRef         `json:"monitorGroup"`
 	Timezone               string                   `json:"timezone"`
 	Frequency              string                   `json:"frequency"`
 	RotationInterval       int                      `json:"rotationInterval"`
@@ -49,6 +57,8 @@ type OnCallSchedule struct {
 // OnCallScheduleInput is the request body for creating/updating an on-call schedule.
 type OnCallScheduleInput struct {
 	Name             string `json:"name"`
+	ScopeType        string `json:"scopeType"`
+	MonitorGroupID   *int   `json:"monitorGroupId,omitempty"`
 	Timezone         string `json:"timezone"`
 	Frequency        string `json:"frequency"`
 	RotationInterval int    `json:"rotationInterval"`

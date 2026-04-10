@@ -32,5 +32,7 @@ Read-Only:
 - `enabled` (Boolean) Whether the schedule is active.
 - `frequency` (String) Rotation frequency.
 - `id` (Number) The ID of the on-call schedule.
+- `monitor_group_id` (Number) The monitor group ID this schedule is scoped to, if any.
 - `name` (String) The name of the on-call schedule.
+- `scope_type` (String) Schedule scope: org_default or monitor_group.
 - `timezone` (String) IANA timezone.

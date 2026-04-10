@@ -327,6 +327,49 @@ func (r *monitorResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 					},
 				},
 			},
+			"assertion": schema.ListNestedBlock{
+				Description: "Response body assertion blocks. Only supported for HTTPS and HTTP_KEYWORD monitor types. Maximum 10 per monitor.",
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(10),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"type": schema.StringAttribute{
+							Description: "The assertion type. Valid values: json_path, xpath, regex.",
+							Required:    true,
+							Validators: []validator.String{
+								stringvalidator.OneOf("json_path", "xpath", "regex"),
+							},
+						},
+						"expression": schema.StringAttribute{
+							Description: "The expression to evaluate (JSONPath, XPath, or regex pattern). Maximum 500 characters.",
+							Required:    true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(500),
+							},
+						},
+						"comparison": schema.StringAttribute{
+							Description: "The comparison operator. Valid values depend on assertion type.",
+							Required:    true,
+							Validators: []validator.String{
+								stringvalidator.OneOf(
+									"equals", "not_equals", "contains", "not_contains",
+									"greater_than", "less_than",
+									"exists", "not_exists", "is_empty", "is_not_empty",
+									"matches", "not_matches",
+								),
+							},
+						},
+						"expected_value": schema.StringAttribute{
+							Description: "The expected value for comparison. Required for equals, not_equals, contains, not_contains, greater_than, less_than. Maximum 1000 characters.",
+							Optional:    true,
+							Validators: []validator.String{
+								stringvalidator.LengthAtMost(1000),
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -431,6 +474,73 @@ func (r *monitorResource) ValidateConfig(ctx context.Context, req resource.Valid
 			"Missing Location Configuration",
 			"One of 'location_ids' or 'location_names' is required when location_type is 'locations'.",
 		)
+	}
+
+	// Validate assertions are only used with HTTP-based monitor types
+	if !data.Assertions.IsNull() && !data.Assertions.IsUnknown() {
+		assertionTypes := map[string]bool{"HTTPS": true, "HTTP_KEYWORD": true}
+		if !assertionTypes[monitorType] {
+			resp.Diagnostics.AddAttributeError(
+				path.Root("assertion"),
+				"Assertions Not Supported",
+				fmt.Sprintf("Response body assertions are only supported for HTTPS and HTTP_KEYWORD monitor types, not %q.", monitorType),
+			)
+		}
+
+		var assertionModels []AssertionModel
+		resp.Diagnostics.Append(data.Assertions.ElementsAs(ctx, &assertionModels, false)...)
+		if !resp.Diagnostics.HasError() {
+			jsonPathComparisons := map[string]bool{
+				"equals": true, "not_equals": true, "contains": true, "not_contains": true,
+				"greater_than": true, "less_than": true,
+				"exists": true, "not_exists": true, "is_empty": true, "is_not_empty": true,
+			}
+			xpathComparisons := map[string]bool{
+				"equals": true, "not_equals": true, "contains": true, "not_contains": true,
+				"exists": true, "not_exists": true,
+			}
+			regexComparisons := map[string]bool{
+				"matches": true, "not_matches": true,
+			}
+			validComparisons := map[string]map[string]bool{
+				"json_path": jsonPathComparisons,
+				"xpath":     xpathComparisons,
+				"regex":     regexComparisons,
+			}
+			comparisonsWithoutValue := map[string]bool{
+				"exists": true, "not_exists": true,
+				"is_empty": true, "is_not_empty": true,
+				"matches": true, "not_matches": true,
+			}
+
+			for i, am := range assertionModels {
+				if am.Type.IsUnknown() || am.Comparison.IsUnknown() {
+					continue
+				}
+				assertType := am.Type.ValueString()
+				comparison := am.Comparison.ValueString()
+
+				if comps, ok := validComparisons[assertType]; ok {
+					if !comps[comparison] {
+						resp.Diagnostics.AddAttributeError(
+							path.Root("assertion"),
+							"Invalid Comparison for Assertion Type",
+							fmt.Sprintf("Assertion %d: comparison %q is not valid for assertion type %q.", i, comparison, assertType),
+						)
+					}
+				}
+
+				if !comparisonsWithoutValue[comparison] {
+					if am.ExpectedValue.IsNull() || am.ExpectedValue.IsUnknown() {
+						resp.Diagnostics.AddAttributeError(
+							path.Root("assertion"),
+							"Missing Expected Value",
+							fmt.Sprintf("Assertion %d: expected_value is required when comparison is %q.", i, comparison),
+						)
+					}
+				}
+			}
+		}
 	}
 }
 
@@ -797,6 +907,24 @@ func modelToInput(ctx context.Context, m *MonitorModel, client *apiclient.Client
 		input.Alerts = alerts
 	}
 
+	// Assertions
+	if !m.Assertions.IsNull() && !m.Assertions.IsUnknown() {
+		var assertionModels []AssertionModel
+		diags.Append(m.Assertions.ElementsAs(ctx, &assertionModels, false)...)
+
+		assertions := make([]apiclient.AssertionConfig, 0, len(assertionModels))
+		for _, am := range assertionModels {
+			ac := apiclient.AssertionConfig{
+				Type:          am.Type.ValueString(),
+				Expression:    am.Expression.ValueString(),
+				Comparison:    am.Comparison.ValueString(),
+				ExpectedValue: helpers.StringPtr(am.ExpectedValue),
+			}
+			assertions = append(assertions, ac)
+		}
+		input.Assertions = assertions
+	}
+
 	return input, diags
 }
 
@@ -1139,6 +1267,39 @@ func apiToModel(ctx context.Context, monitor *apiclient.Monitor, m *MonitorModel
 			AttrTypes: alertAttrTypes,
 		}
 		m.Alerts = types.ListNull(alertObjType)
+	}
+
+	// Assertions
+	assertionAttrTypes := map[string]attr.Type{
+		"type":           types.StringType,
+		"expression":     types.StringType,
+		"comparison":     types.StringType,
+		"expected_value": types.StringType,
+	}
+	assertionObjType := types.ObjectType{AttrTypes: assertionAttrTypes}
+
+	if len(monitor.Assertions) > 0 {
+		assertionValues := make([]attr.Value, 0, len(monitor.Assertions))
+		for _, ac := range monitor.Assertions {
+			assertionAttrs := map[string]attr.Value{
+				"type":       types.StringValue(ac.Type),
+				"expression": types.StringValue(ac.Expression),
+				"comparison": types.StringValue(ac.Comparison),
+			}
+			if ac.ExpectedValue != nil {
+				assertionAttrs["expected_value"] = types.StringValue(*ac.ExpectedValue)
+			} else {
+				assertionAttrs["expected_value"] = types.StringNull()
+			}
+			objVal, d := types.ObjectValue(assertionAttrTypes, assertionAttrs)
+			diags.Append(d...)
+			assertionValues = append(assertionValues, objVal)
+		}
+		listVal, d := types.ListValue(assertionObjType, assertionValues)
+		diags.Append(d...)
+		m.Assertions = listVal
+	} else {
+		m.Assertions = types.ListNull(assertionObjType)
 	}
 
 	return diags

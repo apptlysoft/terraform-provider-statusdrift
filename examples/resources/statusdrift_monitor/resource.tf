@@ -30,6 +30,19 @@ resource "statusdrift_monitor" "api_health" {
     notify_on_call             = true
     on_call_policy_id          = statusdrift_on_call_policy.default.id
   }
+
+  assertion {
+    type           = "json_path"
+    expression     = "$.status"
+    comparison     = "equals"
+    expected_value = "healthy"
+  }
+
+  assertion {
+    type       = "regex"
+    expression = "\"status\"\\s*:\\s*\"healthy\""
+    comparison = "matches"
+  }
 }
 
 resource "statusdrift_monitor" "dns_check" {

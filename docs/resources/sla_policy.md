@@ -17,6 +17,7 @@ resource "statusdrift_sla_policy" "production" {
   name          = "Production SLA"
   uptime_target = 99.9
   window_type   = "calendar_month"
+  scope         = "org"
 
   response_time_sla_enabled  = true
   response_time_threshold_ms = 500
@@ -41,7 +42,8 @@ resource "statusdrift_sla_policy" "production" {
 - `group_ids` (List of Number) List of monitor group IDs covered by this policy (max 20).
 - `monitor_ids` (List of Number) List of monitor IDs directly covered by this policy (max 50).
 - `response_time_sla_enabled` (Boolean) Whether response time SLA tracking is enabled.
-- `response_time_threshold_ms` (Number) Response time threshold in milliseconds (1 to 60000). Required when response_time_sla_enabled is true.
+- `response_time_threshold_ms` (Number) Response time threshold in milliseconds (1 to 30000). Required when response_time_sla_enabled is true.
+- `scope` (String) Policy scope: org (organization-wide) or group (group-specific). Defaults to org.
 - `tag_ids` (List of Number) List of tag IDs for dynamic monitor selection (max 20).
 
 ### Read-Only

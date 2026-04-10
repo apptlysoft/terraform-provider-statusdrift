@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -72,6 +73,15 @@ func (r *slaPolicyResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				Required:    true,
 				Validators: []validator.String{
 					stringvalidator.OneOf("calendar_week", "calendar_month", "calendar_year", "rolling_30d"),
+				},
+			},
+			"scope": schema.StringAttribute{
+				Description: "Policy scope: org (organization-wide) or group (group-specific). Defaults to org.",
+				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString("org"),
+				Validators: []validator.String{
+					stringvalidator.OneOf("org", "group"),
 				},
 			},
 			"response_time_sla_enabled": schema.BoolAttribute{
@@ -151,6 +161,7 @@ func (r *slaPolicyResource) Create(ctx context.Context, req resource.CreateReque
 		Name:         plan.Name.ValueString(),
 		UptimeTarget: plan.UptimeTarget.ValueFloat64(),
 		WindowType:   plan.WindowType.ValueString(),
+		Scope:        plan.Scope.ValueString(),
 	}
 
 	input.ResponseTimeSlaEnabled = helpers.BoolPtr(plan.ResponseTimeSlaEnabled)
@@ -233,6 +244,7 @@ func (r *slaPolicyResource) Update(ctx context.Context, req resource.UpdateReque
 	name := plan.Name.ValueString()
 	uptimeTarget := plan.UptimeTarget.ValueFloat64()
 	windowType := plan.WindowType.ValueString()
+	scope := plan.Scope.ValueString()
 	responseTimeSlaEnabled := plan.ResponseTimeSlaEnabled.ValueBool()
 	enabled := plan.Enabled.ValueBool()
 
@@ -240,6 +252,7 @@ func (r *slaPolicyResource) Update(ctx context.Context, req resource.UpdateReque
 		Name:                   &name,
 		UptimeTarget:           &uptimeTarget,
 		WindowType:             &windowType,
+		Scope:                  &scope,
 		ResponseTimeSlaEnabled: &responseTimeSlaEnabled,
 		Enabled:                &enabled,
 	}
@@ -333,6 +346,7 @@ func apiToModel(p *apiclient.SlaPolicy, m *SlaPolicyModel, diags *diag.Diagnosti
 	m.Name = types.StringValue(p.Name)
 	m.UptimeTarget = types.Float64Value(p.UptimeTarget)
 	m.WindowType = types.StringValue(p.WindowType)
+	m.Scope = types.StringValue(p.Scope)
 	m.ResponseTimeSlaEnabled = types.BoolValue(p.ResponseTimeSlaEnabled)
 	m.Enabled = types.BoolValue(p.Enabled)
 	m.CreatedAt = types.StringValue(p.CreatedAt)

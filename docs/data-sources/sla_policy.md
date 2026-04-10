@@ -38,6 +38,7 @@ data "statusdrift_sla_policy" "by_id" {
 - `monitor_ids` (List of Number) List of monitor IDs directly covered by this policy.
 - `response_time_sla_enabled` (Boolean) Whether response time SLA tracking is enabled.
 - `response_time_threshold_ms` (Number) Response time threshold in milliseconds.
+- `scope` (String) Policy scope: org or group.
 - `tag_ids` (List of Number) List of tag IDs for dynamic monitor selection.
 - `updated_at` (String) When the SLA policy was last updated.
 - `uptime_target` (Number) Target uptime percentage.
